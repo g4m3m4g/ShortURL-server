@@ -6,6 +6,7 @@ import (
 	"simpleurl/models"
 	"simpleurl/utils"
 	"time"
+	//"fmt"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -17,6 +18,7 @@ func HandleShortenRequest(c *gin.Context, db *gorm.DB) {
 		URL string `json:"url" binding:"required"`
 	}
 
+
 	if err := c.ShouldBindJSON(&data); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -25,11 +27,15 @@ func HandleShortenRequest(c *gin.Context, db *gorm.DB) {
 	// Normalize the URL to include the protocol
 	originalUrl := utils.NormalizeURL(data.URL)
 
-	// Check if the URL is accessible
-	if !utils.IsURLAccessible(originalUrl) {
+	if !utils.SkipCheck(originalUrl){
+
+		// Check if the URL is accessible
+		if !utils.IsURLAccessible(originalUrl) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "The URL is not accessible"})
 		return
 	}
+	}
+
 
 	var link models.SimpleUrl
 	result := db.Where("original_url = ?", originalUrl).First(&link)
